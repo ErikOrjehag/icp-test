@@ -17,6 +17,8 @@ include_directories("${PROJECT_BINARY_DIR}")
 # Define sources and executable
 set(EXECUTABLE_NAME "slambot")
 add_executable(${EXECUTABLE_NAME}
+  xv11lidar/xv11lidar.c
+  TransformStack.cpp
   main.cpp
 )
 
@@ -27,13 +29,13 @@ set(
   ${CMAKE_MODULE_PATH} 
 )
 
-#find_package(SFML 2 REQUIRED system window graphics network audio)
+find_package(SFML 2 REQUIRED system window graphics network audio)
 
-#include_directories(${SFML_INCLUDE_DIR})
+include_directories(${SFML_INCLUDE_DIR})
 
 target_link_libraries(
   ${EXECUTABLE_NAME} 
-#  ${SFML_LIBRARIES} 
+  ${SFML_LIBRARIES} 
 )
 
 # Install target

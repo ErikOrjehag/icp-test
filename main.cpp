@@ -1,5 +1,91 @@
-#include <stdio>
+#include <iostream>
+#include "xv11lidar/xv11lidar.h"
+#include <SFML/Graphics.hpp>
+#include "TransformStack.hpp"
+
+const int WIDTH = 800;
+const int HEIGHT = 800;
 
 int main() {
-  std::cout << "Hello world!" << std::endl;
+
+  const int NUM_READINGS = 90; // 90 frames/revolution
+
+  struct xv11lidar *lidar = xv11lidar_init("/dev/ttyUSB1", NUM_READINGS, 10);
+
+  if (lidar == NULL) {
+    std::cout << "LIDAR init error" << std::endl;
+    return 1;
+  }
+
+  struct xv11lidar_frame frames[NUM_READINGS];
+
+  sf::RenderWindow window(sf::VideoMode(WIDTH, HEIGHT), "SFML window");
+  TransformStack ts;
+  /*sf::CircleShape pixel(1);
+  pixel.setFillColor(sf::Color::Green);*/
+  sf::VertexArray pixel(sf::PrimitiveType::Lines, 2);
+  pixel[0] = sf::Vertex(sf::Vector2f(0, 0), sf::Color::Green);
+  pixel[1] = sf::Vertex(sf::Vector2f(1000, 0), sf::Color::Green);
+  ts.translate(WIDTH/2, HEIGHT/2);
+
+  while (window.isOpen()) {
+    sf::Event event;
+    while (window.pollEvent(event)) {
+        if (event.type == sf::Event::Closed) {
+            window.close();
+        }
+    }
+
+    int status = xv11lidar_read(lidar, frames);
+
+    window.clear();
+
+    ts.push();
+    ts.scale(0.5);
+
+    if (status == XV11LIDAR_SUCCESS) {
+      for (auto frame : frames) {
+
+        for (int i = 0; i < 4; i++) {
+
+          auto reading = frame.readings[i];
+          int angle = (frame.index - 0xA0) * 4 + i;
+
+          std::cout 
+            << reading.strength_warning << " : " 
+            << reading.invalid_data << " : "
+            << angle << " : "
+            << reading.signal_strength << " : "
+            << reading.distance << std::endl;
+
+          if (!reading.invalid_data && !reading.strength_warning) {
+            ts.push();
+            ts.rotate(angle);
+            ts.translate(reading.distance, 0);
+            window.draw(pixel, ts);
+            ts.pop();
+          }
+        }
+      }
+      std::cout << "Speed: " << (frames[0].speed / 64.0) << std::endl;
+    } else {
+      std::cout << "Error" << std::endl;
+    }
+
+    ts.pop();
+
+    sf::VertexArray origo(sf::PrimitiveType::Lines, 4);
+    origo[0] = sf::Vertex(sf::Vector2f(-1, 0), sf::Color::White);
+    origo[1] = sf::Vertex(sf::Vector2f(1, 0), sf::Color::White);
+    origo[2] = sf::Vertex(sf::Vector2f(0, -1), sf::Color::White);
+    origo[3] = sf::Vertex(sf::Vector2f(0, 1), sf::Color::White);
+    ts.push();
+    ts.scale(10);
+    window.draw(origo, ts);
+    ts.pop();
+
+    window.display();
+  }
+
+  xv11lidar_close(lidar);
 }
