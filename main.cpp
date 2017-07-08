@@ -2,6 +2,9 @@
 #include "xv11lidar/xv11lidar.h"
 #include <SFML/Graphics.hpp>
 #include "TransformStack.hpp"
+#include "Vec2.hpp"
+#include "Pose.hpp"
+#include "ICP.hpp"
 
 const int WIDTH = 800;
 const int HEIGHT = 800;
@@ -10,6 +13,7 @@ int main() {
 
   const int NUM_READINGS = 90; // 90 frames/revolution
 
+  #ifdef LIDAR
   struct xv11lidar *lidar = xv11lidar_init("/dev/ttyUSB1", NUM_READINGS, 10);
 
   if (lidar == NULL) {
@@ -18,6 +22,7 @@ int main() {
   }
 
   struct xv11lidar_frame frames[NUM_READINGS];
+  #endif
 
   sf::RenderWindow window(sf::VideoMode(WIDTH, HEIGHT), "SFML window");
   TransformStack ts;
@@ -28,17 +33,24 @@ int main() {
   pixel[1] = sf::Vertex(sf::Vector2f(1000, 0), sf::Color::Green);
   ts.translate(WIDTH/2, HEIGHT/2);
 
+  int itr = 0;
+
   while (window.isOpen()) {
+    bool shouldContinue = true;
     sf::Event event;
     while (window.pollEvent(event)) {
         if (event.type == sf::Event::Closed) {
             window.close();
+        } else if (event.type == sf::Event::KeyPressed) {
+          shouldContinue = false;
         }
     }
-
-    int status = xv11lidar_read(lidar, frames);
+    if (shouldContinue) continue;
 
     window.clear();
+
+    #ifdef LIDAR
+    int status = xv11lidar_read(lidar, frames);
 
     ts.push();
     ts.scale(0.5);
@@ -73,6 +85,42 @@ int main() {
     }
 
     ts.pop();
+    #endif
+
+    std::vector<Vec2> points;
+    points.push_back(Vec2(-50, -50));
+    points.push_back(Vec2(-50, 50));
+    points.push_back(Vec2(50, 50));
+    points.push_back(Vec2(50, -50));
+    std::vector<Vec2> points2;
+    points2.push_back(Vec2(-50, -50));
+    points2.push_back(Vec2(-50, 50));
+    points2.push_back(Vec2(50, 50));
+    points2.push_back(Vec2(50, -50));
+    sf::CircleShape pointShape(4);
+
+    Pose pose;
+    pose.pos.x = 30;
+    pose.pos.y = 30;
+    pose.angle = 0.3;
+    //pose.accumulate(pose);
+    pose.transform(&points);
+
+    Pose icp = icp_align(points, points2, Pose(), itr++);
+
+    ts.push();
+    ts.translate(-2, -2);
+    pointShape.setFillColor(sf::Color::Red);
+    for (Vec2 point : points) {
+      pointShape.setPosition(sf::Vector2f(point.x, point.y));
+      window.draw(pointShape, ts);
+    }
+    pointShape.setFillColor(sf::Color::Green);
+    for (Vec2 point : points2) {
+      pointShape.setPosition(sf::Vector2f(point.x, point.y));
+      window.draw(pointShape, ts);
+    }
+    ts.pop();
 
     sf::VertexArray origo(sf::PrimitiveType::Lines, 4);
     origo[0] = sf::Vertex(sf::Vector2f(-1, 0), sf::Color::White);
@@ -87,5 +135,7 @@ int main() {
     window.display();
   }
 
+  #ifdef LIDAR
   xv11lidar_close(lidar);
+  #endif
 }

@@ -19,6 +19,10 @@ set(EXECUTABLE_NAME "slambot")
 add_executable(${EXECUTABLE_NAME}
   xv11lidar/xv11lidar.c
   TransformStack.cpp
+  Vec2.cpp
+#  KDTree.cpp
+  Pose.cpp
+  ICP.cpp
   main.cpp
 )
 
