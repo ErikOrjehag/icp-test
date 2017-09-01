@@ -2,6 +2,13 @@
 
 SLAM robot.
 
+## Clone
+git clone --recursive <URL>
+
+## Dependencies
+sudo apt-get update
+sudo apt-get install libsfml-dev
+
 ## Resources
 https://ocw.mit.edu/courses/aeronautics-and-astronautics/16-412j-cognitive-robotics-spring-2005/projects/1aslam_blas_repo.pdf
 https://ziyan.net/2009/09/iterative-closest-point/

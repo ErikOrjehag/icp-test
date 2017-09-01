@@ -3,7 +3,7 @@
 
 
 Pose icp_align(
-    std::vector<Vec2> &source, 
+    std::vector<Vec2> &source,
     std::vector<Vec2> &targets, 
     Pose pose, int iterations)
 {
@@ -40,7 +40,7 @@ Vec2* icp_closest_point(
 {
     double minDist = std::numeric_limits<float>::infinity();
     Vec2 *closestPoint = NULL;
-    
+
     for (std::vector<Vec2>::iterator p = points.begin(); p != points.end(); p++)
     {
         double sqrdDist = point.sqrdDistTo(*p);
