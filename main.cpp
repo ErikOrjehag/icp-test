@@ -45,7 +45,7 @@ int main() {
     sf::Event event;
     while (window.pollEvent(event)) {
         if (event.type == sf::Event::Closed) {
-            window.close();
+          window.close();
         }
     }
 
@@ -82,7 +82,7 @@ int main() {
       std::cout << "Error" << std::endl;
     }
 
-    Pose icp = icp_align(sweep, map, Pose(), 5);
+    /*Pose icp = icp_align(sweep, map, Pose(), 5);
 
     for (Vec2 point : sweep) {
       bool foundMatch = false;
@@ -97,26 +97,26 @@ int main() {
       if (!foundMatch) {
         map.push_back(point);
       }
-    }
+    }*/
 
     ts.push();
     ts.scale(0.3);
 
-    pixel.setFillColor(sf::Color::White);
+    /*pixel.setFillColor(sf::Color::White);
     for (Vec2 point : map) {
       ts.push();
       ts.translate(point.x, point.y);
       window.draw(pixel, ts);
       ts.pop();
-    }
+    }*/
 
-    /*pixel.setFillColor(sf::Color::Green);
+    pixel.setFillColor(sf::Color::Green);
     for (Vec2 point : sweep) {
       ts.push();
       ts.translate(point.x, point.y);
       window.draw(pixel, ts);
       ts.pop();
-    }*/
+    }
 
     ts.pop();
 
